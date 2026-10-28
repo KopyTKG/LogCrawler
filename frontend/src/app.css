@@ -1,0 +1,202 @@
+:root {
+  --bg: #ffffff;
+  --bg-alt: #f4f5f7;
+  --bg-hover: #e9ecf1;
+  --bg-select: #d6e4ff;
+  --fg: #1c1e21;
+  --fg-dim: #6b7280;
+  --border: #d5d8de;
+  --accent: #2459d8;
+  --error: #c62828;
+  --error-bg: #fdecec;
+  --warn: #a15c00;
+  --warn-bg: #fff4de;
+  --hit: #fff1a8;
+  --mono: ui-monospace, 'SF Mono', Menlo, Consolas, 'DejaVu Sans Mono', monospace;
+  --sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #16181d;
+    --bg-alt: #1e2127;
+    --bg-hover: #282c34;
+    --bg-select: #27395f;
+    --fg: #dfe2e8;
+    --fg-dim: #8b919d;
+    --border: #333843;
+    --accent: #7aa2ff;
+    --error: #ff7b72;
+    --error-bg: #3a1e1f;
+    --warn: #e3b341;
+    --warn-bg: #3a2f17;
+    --hit: #5c4b00;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font: 13px/1.4 var(--sans);
+  overflow: hidden;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 3px 10px;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  background: var(--bg-hover);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+button.on {
+  background: var(--bg-select);
+  border-color: var(--accent);
+}
+
+input[type='search'],
+select {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 3px 8px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+/* Log text colours, shared by the tree rows and the detail pane. */
+:root {
+  --c-time: #6b7280;
+  --c-id: #8a5cc8;
+  --c-method: #0b7a75;
+  --c-url: #2459d8;
+  --c-dur: #6b7280;
+  --c-ok: #1a7f37;
+  --c-3: #0b7a75;
+  --c-4: #a15c00;
+  --c-5: #c62828;
+  --c-req: #2459d8;
+  --tag-s: 60%;
+  --tag-l: 38%;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --c-time: #8b919d;
+    --c-id: #c4a1ff;
+    --c-method: #4ec9b0;
+    --c-url: #7aa2ff;
+    --c-dur: #8b919d;
+    --c-ok: #56d364;
+    --c-3: #4ec9b0;
+    --c-4: #e3b341;
+    --c-5: #ff7b72;
+    --c-req: #7aa2ff;
+    --tag-s: 65%;
+    --tag-l: 68%;
+  }
+}
+
+.tk-time {
+  color: var(--c-time);
+}
+.tk-lvl-error,
+.tk-fail,
+.st-5 {
+  color: var(--c-5);
+  font-weight: 600;
+}
+.tk-lvl-warn,
+.st-4 {
+  color: var(--c-4);
+  font-weight: 600;
+}
+.tk-tag {
+  color: hsl(var(--h, 0) var(--tag-s) var(--tag-l));
+  font-weight: 600;
+}
+.tk-id {
+  color: var(--c-id);
+}
+.tk-req {
+  color: var(--c-req);
+}
+.tk-ok,
+.st-2 {
+  color: var(--c-ok);
+}
+.st-3 {
+  color: var(--c-3);
+}
+.tk-method {
+  color: var(--c-method);
+  font-weight: 600;
+}
+.tk-url {
+  color: var(--c-url);
+}
+.tk-dur {
+  color: var(--c-dur);
+}
+
+/* JSON in the detail pane. */
+:root {
+  --c-key: #0b7a75;
+  --c-str: #1a7f37;
+  --c-num: #a15c00;
+  --c-lit: #8a5cc8;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --c-key: #4ec9b0;
+    --c-str: #9ece6a;
+    --c-num: #e3b341;
+    --c-lit: #c4a1ff;
+  }
+}
+
+.tk-key {
+  color: var(--c-key);
+}
+.tk-str {
+  color: var(--c-str);
+}
+.tk-num {
+  color: var(--c-num);
+}
+.tk-null,
+.tk-bool {
+  color: var(--c-lit);
+}
