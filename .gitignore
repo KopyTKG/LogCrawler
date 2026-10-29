@@ -1,3 +1,23 @@
-bin/
-frontend/bindings/
-frontend/dist/
+# Real device logs hold user emails, account ids and sometimes live Bearer tokens.
+# They stay on this machine: only redacted fixtures under testdata/fixtures/ are committed.
+testdata/raw/*
+!testdata/raw/.gitkeep
+*.log
+
+# Go
+/bin/
+*.test
+*.out
+coverage.*
+
+# Wails
+/build/bin/
+/frontend/node_modules/
+/frontend/dist/
+/frontend/wailsjs/
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store
+/frontend/bindings/
