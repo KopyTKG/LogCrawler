@@ -1,0 +1,84 @@
+// Jenkins pipeline for LogCrawler. In the job, set Script Path to .jenkins/Jenkinsfile.
+//
+// - Prepare, Toolchain, Lint, Test and Build run for every branch and pull request.
+// - Publish runs only for a tag (v0.1.0 and so on) and archives the Linux binary.
+//
+// The Linux build links GTK 3 and WebKitGTK 4.1 through cgo, so the agent needs their development
+// headers, installed from the distro (Debian: build-essential pkg-config libgtk-3-dev
+// libwebkit2gtk-4.1-dev), plus git and mise on PATH. Go, Node, yarn and just come from mise.toml;
+// wails3 is installed by `just setup` into the workspace. Windows and macOS binaries are not made
+// here: the Jenkinsfile in the repository root does that on agents for those systems.
+
+pipeline {
+    agent any
+
+    options {
+        timestamps()
+        disableConcurrentBuilds(abortPrevious: true)
+        timeout(time: 30, unit: 'MINUTES')
+        buildDiscarder(logRotator(numToKeepStr: '30', artifactNumToKeepStr: '5'))
+    }
+
+    environment {
+        CGO_ENABLED = '1'
+        GOFLAGS = '-buildvcs=false'
+        GOCACHE = "${WORKSPACE}/.cache/go-build"
+        GOPATH = "${WORKSPACE}/.cache/go"
+        PATH = "${WORKSPACE}/.cache/go/bin:${PATH}"
+    }
+
+    stages {
+        stage('Prepare') {
+            steps {
+                // Trust this checkout's mise.toml, install what it pins, then wails3 and the
+                // frontend dependencies.
+                sh '''
+                    mise trust --quiet "$WORKSPACE/mise.toml"
+                    mise install
+                    mise exec -- just setup
+                '''
+                // package.json and yarn.lock must agree: installing may not change the lockfile.
+                sh 'git diff --exit-code -- frontend/yarn.lock'
+            }
+        }
+
+        stage('Toolchain') {
+            steps {
+                // cgo needs a C compiler and the GTK/WebKit headers; fail with a clear message
+                // instead of a cgo error halfway through the build.
+                sh '''
+                    command -v gcc >/dev/null || { echo "gcc missing: apt install build-essential"; exit 1; }
+                    command -v pkg-config >/dev/null || { echo "pkg-config missing: apt install pkg-config"; exit 1; }
+                    pkg-config --exists gtk+-3.0 || { echo "gtk3 headers missing: apt install libgtk-3-dev"; exit 1; }
+                    pkg-config --exists webkit2gtk-4.1 || { echo "webkit2gtk headers missing: apt install libwebkit2gtk-4.1-dev"; exit 1; }
+                '''
+            }
+        }
+
+        stage('Lint') {
+            steps {
+                sh 'mise exec -- just lint'
+                sh 'mise exec -- just vet'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh 'mise exec -- just test'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'mise exec -- just build'
+            }
+        }
+
+        stage('Publish') {
+            when { buildingTag() }
+            steps {
+                archiveArtifacts artifacts: 'bin/logcrawler', fingerprint: true
+            }
+        }
+    }
+}

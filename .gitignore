@@ -21,3 +21,6 @@ coverage.*
 .vscode/
 .DS_Store
 /frontend/bindings/
+
+# CI (Jenkins) caches
+/.cache/
