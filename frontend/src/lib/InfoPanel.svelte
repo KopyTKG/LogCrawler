@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from './i18n.svelte'
   import type { FileInfo } from '../../bindings/logcrawler'
 
   let { file, version = '' }: { file: FileInfo; version?: string } = $props()
@@ -13,22 +14,22 @@
     {/each}
   </dl>
 
-  <h3>Sessions</h3>
+  <h3>{t('info.sessions')}</h3>
   {#each file.sessions as s, i (i)}
     <p>
-      <strong>{s.label || 'session'}</strong><br />
+      <strong>{s.label || t('info.session')}</strong><br />
       {#if s.startedAt}<span class="dim">{s.startedAt}</span><br />{/if}
-      {s.events} events · {s.requests} requests · {s.failed} failed
+      {t('info.counts', { events: s.events, requests: s.requests, failed: s.failed })}
     </p>
   {/each}
 
-  <h3>Lines the parser could not place ({file.problems?.length ?? 0})</h3>
+  <h3>{t('info.problems', { n: file.problems?.length ?? 0 })}</h3>
   {#if !file.problems?.length}
-    <p class="dim">None.</p>
+    <p class="dim">{t('info.none')}</p>
   {:else}
     <ul>
       {#each file.problems ?? [] as p (p.line)}
-        <li><code>line {p.line}</code> {p.why}<br /><code class="text">{p.text}</code></li>
+        <li><code>{t('info.line', { n: p.line })}</code> {p.why}<br /><code class="text">{p.text}</code></li>
       {/each}
     </ul>
   {/if}
@@ -38,17 +39,17 @@
 
 <style>
   .panel {
-    padding: 8px 12px;
+    padding: 0.5rem 0.75rem;
     user-select: text;
   }
   h3 {
-    margin: 12px 0 4px;
-    font-size: 13px;
+    margin: 0.75rem 0 0.25rem;
+    font-size: 0.8125rem;
   }
   dl {
     display: grid;
     grid-template-columns: max-content 1fr;
-    gap: 2px 10px;
+    gap: 2px 0.625rem;
     margin: 0;
   }
   dt {
@@ -59,11 +60,11 @@
     word-break: break-all;
   }
   p {
-    margin: 4px 0;
+    margin: 0.25rem 0;
   }
   ul {
-    padding-left: 16px;
-    margin: 4px 0;
+    padding-left: 1rem;
+    margin: 0.25rem 0;
   }
   .dim {
     color: var(--fg-dim);

@@ -1,3 +1,4 @@
+import { t } from './i18n.svelte'
 import { SvelteMap, SvelteSet } from 'svelte/reactivity'
 import { LogService } from '../../bindings/logcrawler'
 import type { FileInfo } from '../../bindings/logcrawler'
@@ -269,7 +270,7 @@ class Viewer {
   async exportMatches() {
     try {
       const path = await LogService.Export(this.view, { ...this.query })
-      if (path) this.say('Exported')
+      if (path) this.say(t('notice.exported'))
     } catch (e) {
       this.error = message(e)
     }
@@ -341,7 +342,7 @@ class Viewer {
         /* nothing left to try */
       }
     }
-    this.say(ok ? 'Copied to clipboard' : 'Could not copy')
+    this.say(ok ? t('notice.copied') : t('notice.copyFailed'))
   }
 
   say(text: string) {

@@ -1,15 +1,16 @@
 <script lang="ts">
+  import { t } from './i18n.svelte'
   import type { Comparison } from '../../bindings/logcrawler/internal/logtree/models'
 
   let { c, onclose }: { c: Comparison; onclose: () => void } = $props()
 
   const rows = $derived([
-    ['Events', c.a.events, c.b.events],
-    ['Requests', c.a.requests, c.b.requests],
-    ['Failed calls', c.a.failed, c.b.failed],
-    ['Errors', c.a.errors, c.b.errors],
-    ['Unanswered', c.a.unanswered, c.b.unanswered],
-    ['Slow calls', c.a.slow, c.b.slow],
+    [t('compare.events'), c.a.events, c.b.events],
+    [t('compare.requests'), c.a.requests, c.b.requests],
+    [t('compare.failed'), c.a.failed, c.b.failed],
+    [t('compare.errors'), c.a.errors, c.b.errors],
+    [t('compare.unanswered'), c.a.unanswered, c.b.unanswered],
+    [t('compare.slow'), c.a.slow, c.b.slow],
   ] as [string, number, number][])
 </script>
 
@@ -20,14 +21,14 @@
     class="modal"
     role="dialog"
     aria-modal="true"
-    aria-label="Compare logs"
+    aria-label={t('compare.dialog')}
     tabindex="-1"
     onclick={(e) => e.stopPropagation()}
     onkeydown={() => {}}
   >
     <header>
-      <h2>Compare</h2>
-      <button onclick={onclose}>Close</button>
+      <h2>{t('compare.heading')}</h2>
+      <button onclick={onclose}>{t('compare.close')}</button>
     </header>
     <table>
       <thead>
@@ -40,12 +41,12 @@
       </tbody>
     </table>
 
-    <h3>Endpoints that failed</h3>
+    <h3>{t('compare.endpoints')}</h3>
     {#if !c.endpoints?.length}
-      <p class="dim">None in either log.</p>
+      <p class="dim">{t('compare.noneEither')}</p>
     {:else}
       <table>
-        <thead><tr><th>Endpoint</th><th>{c.a.name}</th><th>{c.b.name}</th></tr></thead>
+        <thead><tr><th>{t('compare.endpoint')}</th><th>{c.a.name}</th><th>{c.b.name}</th></tr></thead>
         <tbody>
           {#each c.endpoints as e (e.endpoint)}
             <tr class:diff={!e.a || !e.b}><td class="mono">{e.endpoint}</td><td>{e.a}</td><td>{e.b}</td></tr>
@@ -54,7 +55,7 @@
       </table>
     {/if}
 
-    <h3>Screens visited in only one log</h3>
+    <h3>{t('compare.onlyOne')}</h3>
     <div class="two">
       <div><strong>{c.a.name}</strong><br />{c.onlyA?.join(', ') || '—'}</div>
       <div><strong>{c.b.name}</strong><br />{c.onlyB?.join(', ') || '—'}</div>
@@ -74,9 +75,9 @@
   .modal {
     background: var(--bg);
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 18px 18px;
-    width: min(760px, 92vw);
+    border-radius: 0.5rem;
+    padding: 0.75rem 1.125rem 1.125rem;
+    width: min(47.5rem, 92vw);
     max-height: 86vh;
     overflow: auto;
     user-select: text;
@@ -88,11 +89,11 @@
   }
   h2,
   h3 {
-    margin: 8px 0;
+    margin: 0.5rem 0;
   }
   h3 {
-    font-size: 13px;
-    margin-top: 16px;
+    font-size: 0.8125rem;
+    margin-top: 1rem;
   }
   table {
     width: 100%;
@@ -101,7 +102,7 @@
   th,
   td {
     text-align: left;
-    padding: 3px 8px;
+    padding: 3px 0.5rem;
     border-bottom: 1px solid var(--border);
   }
   th:not(:first-child),
@@ -114,7 +115,7 @@
   }
   .mono {
     font-family: var(--mono);
-    font-size: 12px;
+    font-size: 0.75rem;
   }
   .dim {
     color: var(--fg-dim);
@@ -122,6 +123,6 @@
   .two {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    gap: 0.75rem;
   }
 </style>

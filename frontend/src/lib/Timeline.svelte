@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from './i18n.svelte'
   import { viewer } from './viewer.svelte'
 
   const items = $derived(viewer.failures?.items ?? [])
@@ -7,36 +8,37 @@
 </script>
 
 {#if items.length}
-  <div class="strip" aria-label="Where the failures are in the file">
+  <div class="strip" aria-label={t('timeline.label')}>
     {#each items as f (f.id)}
       <button
         class="tick"
         class:current={f.line === at}
-        style:left="{(f.line / total) * 100}%"
-        title="line {f.line}"
-        aria-label="Failure at line {f.line}"
+        style:top="{(f.line / total) * 100}%"
+        title={t('timeline.line', { n: f.line })}
+        aria-label={t('timeline.failure', { n: f.line })}
         onclick={() => viewer.reveal(f.id)}
       ></button>
     {/each}
-    {#if at > 0}<span class="cursor" style:left="{(at / total) * 100}%"></span>{/if}
+    {#if at > 0}<span class="cursor" style:top="{(at / total) * 100}%"></span>{/if}
   </div>
 {/if}
 
 <style>
   .strip {
     position: relative;
-    height: 14px;
-    margin: 4px 10px;
+    flex: none;
+    width: 0.875rem;
+    margin: 0.25rem;
     background: var(--bg-alt);
     border: 1px solid var(--border);
     border-radius: 3px;
   }
   .tick {
     position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 5px;
-    margin-left: -2px;
+    left: 0;
+    right: 0;
+    height: 0.3125rem;
+    margin-top: -2px;
     padding: 0;
     border: 0;
     border-radius: 1px;
@@ -51,9 +53,9 @@
   }
   .cursor {
     position: absolute;
-    top: -2px;
-    bottom: -2px;
-    width: 2px;
+    left: -2px;
+    right: -2px;
+    height: 2px;
     background: var(--accent);
     pointer-events: none;
   }

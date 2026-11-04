@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/svelte'
-import { describe, expect, it } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/svelte'
+import { afterEach, describe, expect, it } from 'vitest'
 import Detail from './Detail.svelte'
 import type { FileInfo } from '../../bindings/logcrawler'
 
@@ -13,6 +13,8 @@ const file = {
   tags: [],
   lines: 10,
 } as FileInfo
+
+afterEach(cleanup)
 
 describe('Detail', () => {
   it('shows the JSON of a failure body as its own block', () => {
@@ -42,5 +44,14 @@ describe('Detail', () => {
       file,
     })
     expect(screen.getByText(/1 earlier events/)).toBeInTheDocument()
+  })
+
+  it('keeps the raw JSON text for the Raw tab only', async () => {
+    const text = '10:00:00.000 LOG   [http] #7 ✕ body {"status":500}'
+    render(Detail, { text, node: null, file })
+    expect(screen.queryByText(text)).not.toBeInTheDocument()
+    await fireEvent.click(screen.getByRole('tab', { name: 'Raw' }))
+    expect(screen.getByText(/\{"status":500\}/)).toBeInTheDocument()
+    expect(screen.queryByText('Response body')).not.toBeInTheDocument()
   })
 })

@@ -17,8 +17,16 @@
   color-scheme: light dark;
 }
 
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --bg: #16181d;
     --bg-alt: #1e2127;
     --bg-hover: #282c34;
@@ -35,6 +43,22 @@
   }
 }
 
+:root[data-theme='dark'] {
+  --bg: #16181d;
+  --bg-alt: #1e2127;
+  --bg-hover: #282c34;
+  --bg-select: #27395f;
+  --fg: #dfe2e8;
+  --fg-dim: #8b919d;
+  --border: #333843;
+  --accent: #7aa2ff;
+  --error: #ff7b72;
+  --error-bg: #3a1e1f;
+  --warn: #e3b341;
+  --warn-bg: #3a2f17;
+  --hit: #5c4b00;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -49,7 +73,7 @@ body,
 body {
   background: var(--bg);
   color: var(--fg);
-  font: 13px/1.4 var(--sans);
+  font: 0.8125rem/1.4 var(--sans);
   overflow: hidden;
 }
 
@@ -63,8 +87,8 @@ select {
 button {
   background: var(--bg-alt);
   border: 1px solid var(--border);
-  border-radius: 5px;
-  padding: 3px 10px;
+  border-radius: 0.3125rem;
+  padding: 3px 0.625rem;
   cursor: pointer;
 }
 
@@ -86,8 +110,8 @@ input[type='search'],
 select {
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 5px;
-  padding: 3px 8px;
+  border-radius: 0.3125rem;
+  padding: 3px 0.5rem;
 }
 
 :focus-visible {
@@ -112,7 +136,7 @@ select {
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --c-time: #8b919d;
     --c-id: #c4a1ff;
     --c-method: #4ec9b0;
@@ -126,6 +150,21 @@ select {
     --tag-s: 65%;
     --tag-l: 68%;
   }
+}
+
+:root[data-theme='dark'] {
+  --c-time: #8b919d;
+  --c-id: #c4a1ff;
+  --c-method: #4ec9b0;
+  --c-url: #7aa2ff;
+  --c-dur: #8b919d;
+  --c-ok: #56d364;
+  --c-3: #4ec9b0;
+  --c-4: #e3b341;
+  --c-5: #ff7b72;
+  --c-req: #7aa2ff;
+  --tag-s: 65%;
+  --tag-l: 68%;
 }
 
 .tk-time {
@@ -179,12 +218,19 @@ select {
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --c-key: #4ec9b0;
     --c-str: #9ece6a;
     --c-num: #e3b341;
     --c-lit: #c4a1ff;
   }
+}
+
+:root[data-theme='dark'] {
+  --c-key: #4ec9b0;
+  --c-str: #9ece6a;
+  --c-num: #e3b341;
+  --c-lit: #c4a1ff;
 }
 
 .tk-key {

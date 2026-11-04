@@ -1,11 +1,15 @@
 <script lang="ts">
+  import { t } from './i18n.svelte'
   import { tick } from 'svelte'
   import { viewer } from './viewer.svelte'
   import Highlight from './Highlight.svelte'
   import { tagHue } from './highlight'
   import { Severity } from '../../bindings/logcrawler/internal/logtree/models'
 
-  const ROW = 24
+  import { appSettings } from './settings.svelte'
+
+  // 1.5rem: the row height in the CSS follows the UI scale, so the virtual list must as well.
+  const ROW = $derived((24 * appSettings.scale) / 100)
 
   function fmtMs(ms: number): string {
     if (ms < 1000) return `${ms} ms`
@@ -109,7 +113,7 @@
         data-kind={n.kind}
         class:container={n.kind === 'session' || n.kind === 'screen' || n.kind === 'group'}
         style:top="{(start + k) * ROW}px"
-        style:padding-left="{8 + row.depth * 16}px"
+        style:padding-left="{0.5 + row.depth}rem"
         role="treeitem"
         tabindex="-1"
         aria-selected={viewer.selected === n.id}
@@ -120,15 +124,14 @@
         <button
           class="twist"
           tabindex="-1"
-          aria-label={row.open ? 'Collapse' : 'Expand'}
+          aria-label={row.open ? t('tree.collapse') : t('tree.expand')}
           style:visibility={n.hasChildren ? 'visible' : 'hidden'}
           onclick={(e) => {
             e.stopPropagation()
             viewer.toggle(n)
           }}>{row.open ? '▾' : '▸'}</button
         >
-        {#if n.gapMs >= 5000}<span class="gap" title="Time since the previous event">+{fmtMs(n.gapMs)}</span
-          >{/if}
+        {#if n.gapMs >= 5000}<span class="gap" title={t('tree.gap')}>+{fmtMs(n.gapMs)}</span>{/if}
         {#if n.time}<span class="time" title={n.date}>{n.time}</span>{/if}
         {#if n.tag}<span class="tag tk-tag" style:--h={tagHue(n.tag)}>{n.tag}</span>{/if}
         <span class="label" title={n.label}>
@@ -136,16 +139,16 @@
               text={n.tag ? n.label.replace(/^\[[^\]]*\] ?/, '') : n.label}
             />{/if}
         </span>
-        {#if n.slow}<span class="badge slow" title="Slow call">⏱ {fmtMs(n.durationMs)}</span>{/if}
+        {#if n.slow}<span class="badge slow" title={t('tree.slow')}>⏱ {fmtMs(n.durationMs)}</span>{/if}
         {#if n.link >= 0}
           <button
             class="linkbtn"
             tabindex="-1"
-            title="This error repeats a failed call — go to the call"
+            title={t('tree.link')}
             onclick={(e) => {
               e.stopPropagation()
               viewer.reveal(n.link)
-            }}>↳ call</button
+            }}>{t('tree.linkButton')}</button
           >
         {/if}
         {#if n.errors > 0}<span class="badge err">{n.errors}</span>{/if}
@@ -169,22 +172,22 @@
     position: absolute;
     left: 0;
     right: 0;
-    height: 24px;
+    height: 1.5rem;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 0.375rem;
     white-space: nowrap;
     cursor: default;
     font-family: var(--mono);
-    font-size: 12px;
-    padding-right: 8px;
+    font-size: 0.75rem;
+    padding-right: 0.5rem;
   }
   .row:hover {
     background: var(--bg-hover);
   }
   .row.container {
     font-family: var(--sans);
-    font-size: 13px;
+    font-size: 0.8125rem;
     font-weight: 600;
   }
   .row[data-kind='screen'] .label {
@@ -203,7 +206,7 @@
     background: var(--bg-select) !important;
   }
   .twist {
-    width: 16px;
+    width: 1rem;
     padding: 0;
     border: 0;
     background: none;
@@ -217,31 +220,31 @@
     background: var(--bg-alt);
     border: 1px solid var(--border);
     border-radius: 3px;
-    padding: 0 4px;
-    font-size: 11px;
+    padding: 0 0.25rem;
+    font-size: 0.6875rem;
   }
   .label {
     overflow: hidden;
     text-overflow: ellipsis;
   }
   .badge {
-    border-radius: 9px;
-    padding: 0 6px;
-    font: 600 11px/16px var(--sans);
+    border-radius: 0.5625rem;
+    padding: 0 0.375rem;
+    font: 600 0.6875rem/1rem var(--sans);
   }
   .gap {
     color: var(--warn);
-    font-size: 11px;
+    font-size: 0.6875rem;
   }
   .badge.slow {
     background: var(--warn-bg);
     color: var(--warn);
   }
   .linkbtn {
-    padding: 0 6px;
-    font-size: 11px;
-    line-height: 16px;
-    border-radius: 9px;
+    padding: 0 0.375rem;
+    font-size: 0.6875rem;
+    line-height: 1rem;
+    border-radius: 0.5625rem;
   }
   .badge.err {
     background: var(--error-bg);
