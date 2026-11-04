@@ -26,9 +26,11 @@ pipeline {
     environment {
         CGO_ENABLED = '1'
         GOFLAGS = '-buildvcs=false'
-        GOCACHE = "${WORKSPACE}/.cache/go-build"
-        GOPATH = "${WORKSPACE}/.cache/go"
-        PATH = "${WORKSPACE}/.cache/go/bin:${PATH}"
+        // Kept outside the workspace: a tag build gets a fresh workspace, and the Wails module is
+        // large, so downloading it again every build is slow and fails on a flaky connection.
+        GOCACHE = "${HOME}/.cache/logcrawler/go-build"
+        GOPATH = "${HOME}/.cache/logcrawler/go"
+        PATH = "${HOME}/.cache/logcrawler/go/bin:${PATH}"
     }
 
     stages {
@@ -39,7 +41,12 @@ pipeline {
                 sh '''
                     mise trust --quiet "$WORKSPACE/mise.toml"
                     mise install
-                    mise exec -- just setup
+                    # Downloads (Go modules, yarn packages) fail now and then with a TLS timeout.
+                    for attempt in 1 2 3; do
+                        mise exec -- just setup && exit 0
+                        echo "setup failed (attempt $attempt of 3)"; sleep 15
+                    done
+                    exit 1
                 '''
                 // package.json and yarn.lock must agree: installing may not change the lockfile.
                 sh 'git diff --exit-code -- frontend/yarn.lock'
