@@ -25,6 +25,14 @@ version := `git describe --tags --always --dirty 2>/dev/null || echo dev`
 build: frontend
     go build {{tags}} -ldflags "-X main.version={{version}}" -o bin/logcrawler .
 
+# build bin/logcrawler.exe for Windows; works from Linux because Wails on Windows needs no cgo
+build-windows: frontend
+    CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags "-H windowsgui -X main.version={{version}}" -o bin/logcrawler.exe .
+
+# live dev: Vite hot reload for the frontend, Go rebuild and restart on .go changes
+dev:
+    {{ if os() == "linux" { "EXTRA_TAGS=gtk3 " } else { "" } }}wails3 dev -config ./build/config.yml -port 9245
+
 # build and run, optionally opening a log: just run testdata/raw/x.log
 run *args: build
     ./bin/logcrawler {{args}}

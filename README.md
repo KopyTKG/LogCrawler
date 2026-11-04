@@ -10,8 +10,8 @@ Everything happens on your machine. LogCrawler never uploads a log and makes no 
 Built with Go and [Wails v3](https://v3.wails.io/) (Go backend, system web view) and a Svelte 5 +
 TypeScript frontend. Version 0.1.0, BSD 3-Clause licensed (see [LICENSE](LICENSE)).
 
-> Status: first versions. It builds and runs on Linux. The Windows and macOS builds, and the
-> `Jenkinsfile` that makes them, have not been run yet, and the app is not signed.
+> Status: first versions. Targets are Windows and Linux. It builds and runs on Linux; the Windows
+> build cross-compiles but has not been run on Windows yet, and the app is not signed.
 
 ## Using it
 
@@ -60,10 +60,8 @@ remembered.
 | F3 / Shift+F3 | Next / previous search hit |
 | Ctrl + / Ctrl − / Ctrl 0 | Larger / smaller / reset UI size |
 
-(On macOS use Cmd instead of Ctrl.)
-
-The first run of an unsigned build shows a warning: Windows SmartScreen (click *More info*, then
-*Run anyway*) or macOS Gatekeeper (right-click the app, *Open*, once).
+The first run of the unsigned Windows build shows a SmartScreen warning: click *More info*, then
+*Run anyway*.
 
 ## Building
 
@@ -73,6 +71,7 @@ in the `justfile`; `just --list` shows them all.
 ```sh
 just setup     # install the wails3 CLI (v3.0.0) and the frontend dependencies
 just build     # generate bindings, build the frontend, build bin/logcrawler
+just build-windows  # cross-compile bin/logcrawler.exe
 just run       # build and start; `just run path/to/file.log` opens a log
 just dev       # live development: Vite hot reload, Go rebuilds on change
 ```
@@ -82,8 +81,11 @@ with `git tag v0.1.0` before building to get a clean version number.
 
 **Linux** needs the GTK 3 and WebKitGTK 4.1 development packages (`webkit2gtk-4.1`); the justfile
 adds `-tags gtk3` for you. **Windows** needs WebView2, which Windows 10 and 11 already have, so
-users install nothing. **macOS** can only be built on a Mac. Build each OS on its own machine; the
-`Jenkinsfile` does this on agents labelled `linux`, `windows` and `macos` and archives the binaries.
+users install nothing. The Windows build needs no cgo, so `just build-windows` makes
+`bin/logcrawler.exe` from Linux too.
+
+`.jenkins/Jenkinsfile` runs the tests and builds both binaries on a Debian agent; for a tag it
+attaches them to a GitHub release.
 
 ## Development
 

@@ -1,13 +1,17 @@
 // Jenkins pipeline for LogCrawler. In the job, set Script Path to .jenkins/Jenkinsfile.
 //
 // - Prepare, Toolchain, Lint, Test and Build run for every branch and pull request.
-// - Publish runs only for a tag (v0.1.0 and so on) and archives the Linux binary.
+// - Publish and Release run only for a tag (v0.1.0 and so on): the Linux and Windows binaries are
+//   archived and attached to a GitHub release.
 //
 // The Linux build links GTK 3 and WebKitGTK 4.1 through cgo, so the agent needs their development
 // headers, installed from the distro (Debian: build-essential pkg-config libgtk-3-dev
-// libwebkit2gtk-4.1-dev), plus git and mise on PATH. Go, Node, yarn and just come from mise.toml;
-// wails3 is installed by `just setup` into the workspace. Windows and macOS binaries are not made
-// here: the Jenkinsfile in the repository root does that on agents for those systems.
+// libwebkit2gtk-4.1-dev), plus git and mise on PATH. Go, Node, yarn, just and jq come from mise.toml;
+// wails3 is installed by `just setup` into the workspace. The Windows .exe is cross-compiled on this
+// Linux agent (Wails on Windows needs no cgo, so no mingw is required).
+//
+// Tag builds also need a "Secret text" credential `LogCrawler-github-token` with contents:write on
+// KopyTKG/LogCrawler.
 
 pipeline {
     agent any
@@ -70,14 +74,28 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh 'mise exec -- just build'
+                sh 'mise exec -- just build build-windows'
             }
         }
 
         stage('Publish') {
             when { buildingTag() }
             steps {
-                archiveArtifacts artifacts: 'bin/logcrawler', fingerprint: true
+                sh '''
+                    rm -rf dist && mkdir dist
+                    cp bin/logcrawler dist/logcrawler-linux-x64
+                    cp bin/logcrawler.exe dist/logcrawler-windows-x64.exe
+                '''
+                archiveArtifacts artifacts: 'dist/*', fingerprint: true
+            }
+        }
+
+        stage('Release') {
+            when { buildingTag() }
+            steps {
+                withCredentials([string(credentialsId: 'LogCrawler-github-token', variable: 'GH_TOKEN')]) {
+                    sh 'mise exec -- ci/github-release.sh "$TAG_NAME" dist/logcrawler-linux-x64 dist/logcrawler-windows-x64.exe'
+                }
             }
         }
     }

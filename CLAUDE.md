@@ -19,14 +19,14 @@ not import Wails, so the UI can change without touching it.
 app opens a log (dialog, drag-drop, command line, recent files), shows it as a screens or requests
 tree with colours, search and filters, a failure bar with jump and a timeline strip, a detail pane
 with pretty-printed JSON, the events before a failure, a redacted bug-report copy, export, compare
-and reload on change. Not done: Windows and macOS builds have never been run (the `Jenkinsfile` is
-untested), no signing, default Wails app icon. The fixtures are machine-redacted; read them before
+and reload on change. Not done: the Windows build has never been run on Windows (it cross-compiles from Linux,
+`just build-windows`), no signing, default Wails app icon. The fixtures are machine-redacted; read them before
 committing, as the privacy section says.
 
 ## Platform and toolkit decisions
 
-- **Targets: Windows and macOS** — what the colleagues who will use it run. Linux is the developer's
-  machine here; it builds and runs, but nobody is promised a Linux binary.
+- **Targets: Windows and Linux.** Colleagues run Windows; Linux is the developer's machine and the
+  Jenkins server's. macOS is not a target.
 - **Wails v3, pinned to `v3.0.0`** (`github.com/wailsapp/wails/v3`, tagged 2026-10-26 — the first
   stable v3; it follows beta.34 and a `v3.1.0-nightly` already exists). Do not follow nightlies.
   It is days old: expect thinner docs than v2 and rough edges, and check an API against the v3 docs
@@ -50,15 +50,14 @@ committing, as the privacy section says.
     with the Svelte plugin, Prettier with `prettier-plugin-svelte`.
 - **Fyne was considered and rejected**: its tree widget is basic and slows on thousands of nodes, text
   inside it is hard to select and copy, and it needs cgo/OpenGL, which makes shipping to two OSes
-  harder. This tool is a large searchable tree of text people copy from; a web view does that well.
+  harder (Windows and Linux). This tool is a large searchable tree of text people copy from; a web view does that well.
 - **Build and shipping notes (provisional until the first real build):**
-  - macOS can only be built on a Mac. Windows can be built there or here; verify v3's
-    cross-compile path before relying on it.
+  - Windows cross-compiles from Linux with `CGO_ENABLED=0` (`just build-windows`); the result has not
+    been run on Windows yet.
   - Windows needs WebView2, present on Windows 10 and 11, so colleagues install nothing. An unsigned
     `.exe` shows a SmartScreen warning on first run; clicking through is fine.
-  - An unsigned macOS app gets a Gatekeeper warning (right-click → Open once). Signing and
-    notarising needs the team's Apple developer account.
-  - Build each OS on its own machine and attach both binaries to a tagged release.
+  - `.jenkins/Jenkinsfile` builds both binaries on the Debian Jenkins server and, for a tag,
+    attaches them to a GitHub release (`ci/github-release.sh`).
 
 ## Plan
 
@@ -125,7 +124,8 @@ internal/redact/          placeholders for emails, hosts, ids, names; used by th
 cmd/redact/               turns testdata/raw into testdata/fixtures
 main.go, settings.go      window options, remembered size, recent files (config dir, paths only)
 justfile, mise.toml       tasks (`just --list`) and tool versions
-Jenkinsfile               CI: test on linux, build on linux/windows/macos agents
+ci/github-release.sh      attaches the binaries to a GitHub release (Jenkins, on a tag)
+.jenkins/Jenkinsfile      CI: lint, test, build linux and windows on one Debian agent
 main.go, logservice.go    Wails app and the service the frontend calls
 frontend/                 Svelte 5 + TS + Vite UI; bindings/ is generated (gitignored)
 ```

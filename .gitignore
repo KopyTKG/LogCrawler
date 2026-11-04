@@ -19,8 +19,10 @@ coverage.*
 # Editors / OS
 .idea/
 .vscode/
+.task/
 .DS_Store
 /frontend/bindings/
 
 # CI (Jenkins) caches
 /.cache/
+/dist/
