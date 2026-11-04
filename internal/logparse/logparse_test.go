@@ -144,3 +144,36 @@ func TestLastLineWithoutNewline(t *testing.T) {
 		t.Errorf("events = %d", len(f.Sessions[0].Events))
 	}
 }
+
+func TestHeadersAndBodies(t *testing.T) {
+	f := parse(t, `=== current session ===
+10:00:00.000 LOG   [http] #1 → POST https://api.example/a
+10:00:00.000 LOG   [http] #1 → headers {"Accept":"application/json"}
+10:00:00.000 LOG   [http] #1 → body {"a":1}
+10:00:00.100 LOG   [http] #1 ← 200 POST https://api.example/a 100ms
+10:00:00.100 LOG   [http] #1 ← headers {"content-type":"application/json"}
+10:00:00.101 LOG   [http] #1 ← body {"ok":true}
+10:00:01.000 LOG   [http] #2 → POST https://api.example/b
+10:00:01.100 LOG   [http] #2 ✕ 500 POST https://api.example/b 100ms — failed
+10:00:01.100 LOG   [http] #2 ✕ body [binary 105 bytes]
+10:00:01.100 LOG   [http] #2 ✕ sent {"forDriveOnly":true}
+`)
+	if len(f.Problems) != 0 {
+		t.Fatalf("problems: %v", f.Problems)
+	}
+	xs := f.Sessions[0].Exchanges
+	if len(xs) != 2 {
+		t.Fatalf("want 2 exchanges, got %d", len(xs))
+	}
+	a, b := xs[0], xs[1]
+	if a.Method != "POST" || a.URL != "https://api.example/a" {
+		t.Errorf("a: method %q url %q (a body line read as a request?)", a.Method, a.URL)
+	}
+	if a.RequestHeaders != `{"Accept":"application/json"}` || a.RequestBody != `{"a":1}` ||
+		a.ResponseHeaders != `{"content-type":"application/json"}` || a.ResponseBody != `{"ok":true}` {
+		t.Errorf("a parts: %+v", a)
+	}
+	if !b.Failed || b.Body != "[binary 105 bytes]" || b.Sent != `{"forDriveOnly":true}` {
+		t.Errorf("b: %+v", b)
+	}
+}

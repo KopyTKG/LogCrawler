@@ -57,10 +57,15 @@ type Event struct {
 type HTTPPhase int
 
 const (
-	HTTPRequest     HTTPPhase = iota // #1 → POST url
-	HTTPResponse                     // #1 ← 200 POST url 186ms
-	HTTPFailure                      // #1 ✕ 500 POST url 8526ms — message
-	HTTPFailureBody                  // #1 ✕ body {...}
+	HTTPRequest         HTTPPhase = iota // #1 → POST url
+	HTTPResponse                         // #1 ← 200 POST url 186ms
+	HTTPFailure                          // #1 ✕ 500 POST url 8526ms — message
+	HTTPFailureBody                      // #1 ✕ body {...}
+	HTTPRequestHeaders                   // #1 → headers {...}
+	HTTPRequestBody                      // #1 → body {...}
+	HTTPResponseHeaders                  // #1 ← headers {...}
+	HTTPResponseBody                     // #1 ← body {...}
+	HTTPFailureSent                      // #1 ✕ sent {...}: what the failed request carried
 )
 
 type HTTPLine struct {
@@ -70,7 +75,7 @@ type HTTPLine struct {
 	URL        string
 	Status     int
 	DurationMs int
-	Message    string // failure message, or the body of a HTTPFailureBody line
+	Message    string // failure message, or the text after the keyword of a headers, body or sent line
 }
 
 // Exchange is one HTTP call across its lines. Request is nil for a response whose request line
@@ -84,6 +89,13 @@ type Exchange struct {
 	Failed  bool
 	Status  int
 	Body    string // failure body, when logged
+
+	// Logged by app 2.7.0+, empty in older logs.
+	RequestHeaders  string
+	RequestBody     string
+	ResponseHeaders string
+	ResponseBody    string
+	Sent            string // failure only: the request as the app sent it
 }
 
 // Problem is a line the parser could not place.
@@ -103,6 +115,8 @@ var (
 	respRe    = regexp.MustCompile(`^#(\d+) ← (\d+) (\S+) (\S+) (\d+)ms$`)
 	failRe    = regexp.MustCompile(`^#(\d+) ✕ (\d+) (\S+) (\S+) (\d+)ms(?: — (.*))?$`)
 	failBodyR = regexp.MustCompile(`^#(\d+) ✕ body ?(.*)$`)
+	failSentR = regexp.MustCompile(`^#(\d+) ✕ sent ?(.*)$`)
+	partR     = regexp.MustCompile(`^#(\d+) ([→←]) (headers|body) ?(.*)$`)
 )
 
 // Parse reads a whole log. The returned error is only for a failing reader.
@@ -196,6 +210,14 @@ func parseHTTP(msg string) *HTTPLine {
 	if m := failBodyR.FindStringSubmatch(msg); m != nil {
 		return &HTTPLine{Phase: HTTPFailureBody, ID: atoi(m[1]), Message: m[2]}
 	}
+	if m := failSentR.FindStringSubmatch(msg); m != nil {
+		return &HTTPLine{Phase: HTTPFailureSent, ID: atoi(m[1]), Message: m[2]}
+	}
+	// Before reqRe: "#1 → body {...}" would otherwise read as method "body".
+	if m := partR.FindStringSubmatch(msg); m != nil {
+		phase := map[string]HTTPPhase{"→headers": HTTPRequestHeaders, "→body": HTTPRequestBody, "←headers": HTTPResponseHeaders, "←body": HTTPResponseBody}[m[2]+m[3]]
+		return &HTTPLine{Phase: phase, ID: atoi(m[1]), Message: m[4]}
+	}
 	if m := reqRe.FindStringSubmatch(msg); m != nil {
 		return &HTTPLine{Phase: HTTPRequest, ID: atoi(m[1]), Method: m[2], URL: m[3]}
 	}
@@ -244,6 +266,16 @@ func pair(events []*Event) []*Exchange {
 			x.Method, x.URL = h.Method, h.URL
 		case HTTPFailureBody:
 			x.Body = h.Message
+		case HTTPFailureSent:
+			x.Sent = h.Message
+		case HTTPRequestHeaders:
+			x.RequestHeaders = h.Message
+		case HTTPRequestBody:
+			x.RequestBody = h.Message
+		case HTTPResponseHeaders:
+			x.ResponseHeaders = h.Message
+		case HTTPResponseBody:
+			x.ResponseBody = h.Message
 		}
 	}
 	return order

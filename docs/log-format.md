@@ -29,6 +29,12 @@ A file is a **header**, then one or two **sessions**:
   response; `#<id> ✕ <status> <METHOD> <url> <n>ms — <message>` is a failed one, directly followed
   by `#<id> ✕ body <text>` (JSON with `requestId`, or `{}` for an empty body). Ids restart each
   session. A request can have no response at all (app killed, timeout).
+  App 2.7.0+ adds lines under the same id, each with its payload after the keyword and never
+  truncated (a line can be 40 000 characters): `#<id> → headers {…}` and `#<id> → body {…}` after the
+  request, `#<id> ← headers {…}` and `#<id> ← body {…}` after a response, and `#<id> ✕ sent {…}` after
+  a failure's body (the request as sent). A body that is not text reads `[binary <n> bytes]`.
+  Older apps cut long lines with `… [truncated]` (8000 characters); the line is then not valid JSON.
+  Match these keyword lines before the request shape: `#1 → body {"a":1}` also fits `#<id> → <METHOD> <url>`.
 - **`[nav]`** — `<previous> → <current>` with masked route params; `(start)` is the first screen.
 - **`ERROR`** — the message is a JSON object (`{"message": …, "name": "AxiosError", "stack": …}`),
   with no tag. It follows a failed `[http]` call (`✕`) and repeats its message.
@@ -47,5 +53,5 @@ useless on exactly the logs people send because something went wrong.
 `logparse.Parse` returns a `File`: a `Header` (title plus `Key: value` fields), `Sessions` and a list of
 `Problems`. A `Session` holds its `Events` (timestamp, level, tag, message, continuation lines, and for
 `[http]` lines a decoded `HTTPLine`) and its `Exchanges`: each HTTP call with its request, its outcome
-(success or failure) and the failure body. An exchange with no `Outcome` never completed. A `Problem`
+(success or failure), the failure body and, from 2.7.0, the request and response headers and bodies. An exchange with no `Outcome` never completed. A `Problem`
 is a line that belongs to no event; it should stay empty on real logs, and `TestRawLogs` checks that.
