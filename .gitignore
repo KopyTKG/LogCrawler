@@ -3,6 +3,7 @@
 testdata/raw/*
 !testdata/raw/.gitkeep
 *.log
+!testdata/fixtures/*.log
 
 # Go
 /bin/
